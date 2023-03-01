@@ -31,13 +31,13 @@ lto = true
 
 [dependencies]
 ndarray = "0.14.0"
-image = "0.23.12"
-nshare = {version = "0.2.0", features=["image", "ndarray"]}
+image = "0.24.5"
+nshare = { version = "0.2.0", features = ["image", "ndarray"] }
 rdrand = "0.8.0"
 bytes = "1.0.1"
 libflate = "1.0.3"
 average = "0.13.1"
-zstd = {version = "0.9.2+zstd.1.4.8", features=["thin"]}
+zstd = { version = "0.9.2+zstd.1.4.8", features = ["thin"] }
 kmeans = "0.2.0"
 
 [dev-dependencies]
@@ -61,3 +61,4 @@ harness = false
 
 [features]
 debug-out-img = []
+

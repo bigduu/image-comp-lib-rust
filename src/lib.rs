@@ -3,46 +3,47 @@
 /// Library of the Image Compression Algorithm. Explanation on how it works is available at GitHub:  [ReadMe](https://github.com/umgefahren/image-comp-lib-rust/blob/main/README.md)
 
 #[macro_use]
-
 #[doc(hidden)]
 pub mod io;
 #[doc(hidden)]
-pub mod encode;
-#[doc(hidden)]
 pub mod decode;
+#[doc(hidden)]
+pub mod encode;
 
 mod debug;
 
-use std::path::PathBuf;
+use crate::decode::decoder::con_img;
+use crate::encode::encode::comp_img;
+use crate::io::load_image::{load_image, load_image_vec};
 use bytes::Bytes;
 use std::fs::File;
-use std::io::{Write, Read};
-use crate::io::load_image::load_image;
-use crate::encode::encode::comp_img;
-use crate::decode::decoder::con_img;
+use std::io::{Read, Write};
+use std::path::PathBuf;
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-    use image::{RgbImage, Rgb, ImageResult};
-    use crate::decode::lists::decode;
     use crate::debug::compare_img;
-    use crate::encode::flatten::lists::{flatten_list, bytes_list};
-    use crate::decode::construct::lists::{create_list, list_f_bytes};
-    use crate::encode::compress::compressors::comp_data;
     use crate::decode::compress::compressors::dec_comp_data;
-    use crate::encode::grid::grid_obj::from_list;
-    use crate::encode::grid::grid_ops::{calc_cluster_map, calc_grid, calc_data_lists, calc_cluster_colors};
-    use crate::encode::clustering::gen_point_cloud::{gen_point_cloud, gen_euclid_cloud};
-    use crate::encode::clustering::clustering_methods::kmeans_clustering;
-    use crate::encode::flatten::cluster_colors::flatten_cc;
     use crate::decode::construct::cluster_colors::create_cluster_colors;
-    use crate::encode::encode::comp_img;
+    use crate::decode::construct::lists::{create_list, list_f_bytes};
     use crate::decode::decoder::con_img;
-    use std::fs;
+    use crate::decode::lists::decode;
+    use crate::encode::clustering::clustering_methods::kmeans_clustering;
+    use crate::encode::clustering::gen_point_cloud::{gen_euclid_cloud, gen_point_cloud};
+    use crate::encode::compress::compressors::comp_data;
+    use crate::encode::encode::comp_img;
+    use crate::encode::flatten::cluster_colors::flatten_cc;
+    use crate::encode::flatten::lists::{bytes_list, flatten_list};
+    use crate::encode::grid::grid_obj::from_list;
+    use crate::encode::grid::grid_ops::{
+        calc_cluster_colors, calc_cluster_map, calc_data_lists, calc_grid,
+    };
     use crate::io::load_image::load_image;
+    use image::{ImageResult, Rgb, RgbImage};
     use ndarray::Array;
+    use std::fs;
     use std::iter::FromIterator;
+    use std::path::PathBuf;
 
     #[test]
     fn clustering_test_no_loss() {
@@ -184,7 +185,7 @@ mod tests {
                 // println!("Idxe: {} Idye: {}", (idx + 1) * grid.w, (idy + 1) * grid.h);
                 for x in (idx * grid.w)..((idx + 1) * grid.w) {
                     if x >= w_len - 1 {
-                        continue
+                        continue;
                     }
                     let y_iter: Vec<usize> = if counter % 2 == 0 {
                         ((idy * grid.h)..(idy + 1) * grid.h).collect()
@@ -196,7 +197,7 @@ mod tests {
                     for y in y_iter {
                         // println!("x: {} idx: {} y: {} idy: {} {:?}", x, idx, y, idy, res_img.dimensions());
                         if y >= h_len - 1 {
-                            continue
+                            continue;
                         }
                         res_img.put_pixel(x as u32, y as u32, base_color);
                     }
@@ -359,7 +360,10 @@ mod tests {
     fn encode_raw_values() {
         let p = PathBuf::from("./images/img_4.png");
         let img = load_image(p.clone());
-        let flat: Vec<u8> = Array::from_iter(img.data.iter()).iter().map(|i| i.to_owned().to_owned()).collect();
+        let flat: Vec<u8> = Array::from_iter(img.data.iter())
+            .iter()
+            .map(|i| i.to_owned().to_owned())
+            .collect();
         let b = bytes_list(&flat);
         let comp = comp_data(&b);
         println!("Compressed Flat image: {}", comp.len());
@@ -391,6 +395,15 @@ pub fn compress_image(org_s: &String, target_s: &String) {
     let img = load_image(org_p);
     let bs = comp_img(&img, 10, 3);
     write_f(target_p, &bs);
+}
+
+/// Compress Image Vec
+/// 1. Input --> The image as a vector
+/// 2. Output --> The compressed image as a vector
+pub fn compress_image_vec(vec: Vec<u8>) -> Vec<u8> {
+    let img = load_image_vec(vec);
+    let bs = comp_img(&img, 10, 3);
+    bs.to_vec()
 }
 
 /// Decompress Image
